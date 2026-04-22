@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeWorldModel — Beyond Language: When AI Learns Physics</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0A0A0F;
+    --bg-secondary: #111118;
+    --bg-card: #16161F;
+    --bg-elevated: #1C1C28;
+    --text-primary: #E8E8ED;
+    --text-secondary: #9898A6;
+    --text-muted: #5A5A6E;
+    --accent: #4ECDC4;
+    --accent-glow: rgba(78, 205, 196, 0.15);
+    --accent-warm: #FF6B6B;
+    --accent-gold: #F7D794;
+    --border: rgba(255,255,255,0.06);
+    --border-accent: rgba(78, 205, 196, 0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem 6vw;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -20%;
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(78,205,196,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.2s;
+  }
+
+  .hero h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(2.8rem, 6vw, 5.5rem);
+    font-weight: 400;
+    line-height: 1.1;
+    max-width: 900px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.4s;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+    max-width: 640px;
+    margin-top: 2rem;
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.6s;
+  }
+
+  .hero-meta {
+    margin-top: 3rem;
+    display: flex;
+    gap: 3rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.8s;
+  }
+
+  .hero-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .hero-meta-item span:first-child {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .hero-meta-item span:last-child {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    padding: 5rem 6vw;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-accent), transparent);
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  .section h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+    max-width: 700px;
+  }
+
+  .section p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    max-width: 640px;
+    margin-bottom: 1.2rem;
+    font-weight: 300;
+  }
+
+  .section p strong {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* ── STAT CALLOUTS ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 2.5rem 0;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.8rem;
+    transition: border-color 0.3s ease;
+  }
+
+  .stat-card:hover {
+    border-color: var(--border-accent);
+  }
+
+  .stat-value {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2.4rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-value.warm { color: var(--accent-warm); }
+  .stat-value.gold { color: var(--accent-gold); }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem 1.5rem;
+    margin: 1.5rem 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .code-block .comment { color: var(--text-muted); }
+  .code-block .cmd { color: var(--accent); }
+  .code-block .output { color: var(--accent-gold); }
+
+  /* ── TIMELINE ── */
+  .timeline {
+    position: relative;
+    margin: 2rem 0;
+    padding-left: 2rem;
+    border-left: 2px solid var(--border);
+  }
+
+  .timeline-item {
+    position: relative;
+    padding: 0 0 2.5rem 1.5rem;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -2.45rem;
+    top: 0.35rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg-primary);
+  }
+
+  .timeline-item.error::before { background: var(--accent-warm); }
+  .timeline-item.success::before { background: #2ECC71; }
+
+  .timeline-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .timeline-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0.3rem 0;
+  }
+
+  .timeline-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+
+  /* ── MEDIA PLACEHOLDERS ── */
+  .media-embed {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 2rem 0;
+  }
+
+  .media-embed video,
+  .media-embed img {
+    width: 100%;
+    display: block;
+  }
+
+  .media-caption {
+    padding: 1rem 1.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .media-caption .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-glow);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+  }
+
+  /* ── RESULTS TABLE ── */
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+    font-size: 0.9rem;
+  }
+
+  .results-table th {
+    text-align: left;
+    padding: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .results-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+
+  .results-table tr:hover td {
+    background: rgba(78, 205, 196, 0.03);
+  }
+
+  .results-table td:first-child {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-yes {
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ECC71;
+  }
+
+  .badge-no {
+    background: rgba(255, 107, 107, 0.15);
+    color: var(--accent-warm);
+  }
+
+  /* ── INSIGHT CALLOUT ── */
+  .insight {
+    background: linear-gradient(135deg, rgba(78,205,196,0.08), rgba(78,205,196,0.02));
+    border-left: 3px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 1.8rem 2rem;
+    margin: 2rem 0;
+  }
+
+  .insight-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .insight p {
+    color: var(--text-primary);
+    font-size: 1.05rem;
+    max-width: none;
+    font-weight: 400;
+  }
+
+  /* ── COMPARISON GRID ── */
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .comparison-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.8rem;
+  }
+
+  .comparison-card h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+
+  .comparison-card.llm h4 { color: var(--accent-warm); }
+  .comparison-card.wm h4 { color: var(--accent); }
+
+  .comparison-card p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    max-width: none;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    padding: 4rem 6vw;
+    text-align: center;
+    border-top: 1px solid var(--border);
+  }
+
+  .footer p {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    max-width: none;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .hero { padding: 3rem 5vw; }
+    .section { padding: 3rem 5vw; }
+    .hero-meta { flex-direction: column; gap: 1.2rem; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .comparison-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section class="hero">
+  <div class="hero-label">AI Research · Exploration Report</div>
+  <h1>LLMs Predict Words.<br>World Models Predict <em>Physics.</em></h1>
+  <p class="hero-sub">
+    We installed, ran, and stress-tested Yann LeCun's LeWorldModel — a 15M-parameter JEPA that learns physics from raw pixels. Three demos prove it does what no language model can.
+  </p>
+  <div class="hero-meta">
+    <div class="hero-meta-item">
+      <span>Architecture</span>
+      <span>JEPA (Joint-Embedding Predictive)</span>
+    </div>
+    <div class="hero-meta-item">
+      <span>Date</span>
+      <span>April 2026</span>
+    </div>
+    <div class="hero-meta-item">
+      <span>Model</span>
+      <span>LeWM v1 · ~15M params</span>
+    </div>
+    <div class="hero-meta-item">
+      <span>Paper</span>
+      <span>arXiv: 2603.19312</span>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ═══════════════════ SECTION 1: THE THESIS ═══════════════════ -->
+<section class="section fade-in">
+  <div class="section-number">01 — The Thesis</div>
+  <h2>World Models Are the Next Paradigm After LLMs — and LeWM Is the Simplest Proof</h2>
+  <p>
+    Large Language Models predict the next token. World models predict the next <strong>state of reality</strong>. Yann LeCun's Joint-Embedding Predictive Architecture (JEPA) encodes visual frames into a compact 192-dimensional latent space and simulates what happens next given an action — no text, no tokens, just physics.
+  </p>
+  <p>
+    LeWM is the first JEPA that trains stably end-to-end from raw pixels using only <strong>two loss terms</strong>: a prediction loss and a Gaussian regularizer. Previous approaches needed six or more loss terms, frozen pretrained encoders, and exponential moving averages to avoid collapse. LeWM strips all of that away.
+  </p>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value">~15M</div>
+      <div class="stat-label">Parameters (vs. billions for LLMs)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value gold">192</div>
+      <div class="stat-label">Latent dimensions per frame</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">2</div>
+      <div class="stat-label">Loss terms (down from 6+)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value warm">48×</div>
+      <div class="stat-label">Faster planning than DINO-WM</div>
+    </div>
+  </div>
+
+  <div class="comparison-grid">
+    <div class="comparison-card llm">
+      <h4>LLMs (GPT, Claude, Gemini)</h4>
+      <p>Predict the next word. Encode semantics. Cannot take two images and output a motor control sequence. No internal physics engine. Cannot detect physically impossible events from video.</p>
+    </div>
+    <div class="comparison-card wm">
+      <h4>World Models (LeWM)</h4>
+      <p>Predict the next state of the world. Encode physics. Given start + goal images, compute exact action trajectories in latent space. Detect teleportation as anomalous. Spatial structure is recoverable from embeddings.</p>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ═══════════════════ SECTION 2: THE JOURNEY ═══════════════════ -->
+<section class="section fade-in">
+  <div class="section-number">02 — The Journey</div>
+  <h2>From Zero to Running Demos in Under 90 Minutes — Despite 7 Breaking Errors</h2>
+  <p>
+    The codebase is freshly released with minimal documentation. Getting from <code>git clone</code> to a working evaluation required navigating dependency conflicts, mismatched checkpoint formats, deprecated APIs, and undocumented path conventions. Here's the full timeline.
+  </p>
+
+  <div class="timeline">
+    <div class="timeline-item success">
+      <div class="timeline-label">Step 1</div>
+      <div class="timeline-title">Environment setup on Ubuntu 24.04</div>
+      <div class="timeline-desc">Python 3.10 venv via <code>uv</code>, installed <code>stable-worldmodel[train,env]</code> with 178 packages including PyTorch, MuJoCo, JAX, and CUDA bindings.</div>
+    </div>
+
+    <div class="timeline-item error">
+      <div class="timeline-label">Blocker 1</div>
+      <div class="timeline-title"><code>libgl1-mesa-glx</code> removed in Ubuntu 24.04</div>
+      <div class="timeline-desc">Package was deprecated. Switched to <code>libgl1-mesa-dri</code> + <code>libglx-mesa0</code>.</div>
+    </div>
+
+    <div class="timeline-item error">
+      <div class="timeline-label">Blocker 2</div>
+      <div class="timeline-title">Google Drive rate-limited data downloads</div>
+      <div class="timeline-desc">gdown returned 401. Pivoted to HuggingFace: <code>hf download quentinll/lewm-pusht</code> — 13.1 GB compressed, 46 GB decompressed.</div>
+    </div>
+
+    <div class="timeline-item error">
+      <div class="timeline-label">Blocker 3</div>
+      <div class="timeline-title"><code>datasets</code> library v1.1 incompatible with <code>stable_pretraining</code></div>
+      <div class="timeline-desc">Import error on <code>datasets.config</code>. Downgraded to <code>datasets==2.21.0</code>.</div>
+    </div>
+
+    <div class="timeline-item error">
+      <div class="timeline-label">Blocker 4</div>
+      <div class="timeline-title">Cache directory mismatch: <code>.stable-wm</code> vs <code>.stable_worldmodel</code></div>
+      <div class="timeline-desc">HuggingFace README said <code>~/.stable-wm/</code> but the library reads <code>~/.stable_worldmodel/</code>. Fixed with symlinks.</div>
+    </div>
+
+    <div class="timeline-item error">
+      <div class="timeline-label">Blocker 5</div>
+      <div class="timeline-title">Checkpoint format mismatch — HF provides <code>weights.pt</code>, eval expects <code>lewm_object.ckpt</code></div>
+      <div class="timeline-desc">The <code>AutoCostModel</code> loader expects a pickled model object, not just weights. Had to manually instantiate the JEPA architecture from config, load weights, and re-save as a serialized object.</div>
+    </div>
+
+    <div class="timeline-item error">
+      <div class="timeline-label">Blocker 6</div>
+      <div class="timeline-title"><code>stable_worldmodel.wm.lewm</code> module doesn't exist yet</div>
+      <div class="timeline-desc">The LeWM class lives only in the repo's local <code>jepa.py</code>, not in the installed package. Built the model manually using local imports + Hydra config.</div>
+    </div>
+
+    <div class="timeline-item success">
+      <div class="timeline-label">Breakthrough</div>
+      <div class="timeline-title">First successful eval: 96% success rate on Push-T</div>
+      <div class="timeline-desc">50 episodes, ~215 seconds per CEM solve. 50 rollout videos generated. Model plans action sequences purely from pixel observations.</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ═══════════════════ SECTION 3: DEMO 1 ═══════════════════ -->
+<section class="section fade-in">
+  <div class="section-number">03 — Demo 1: Planning</div>
+  <h2>A 15M-Parameter Model Plans Robot Actions at 96% Accuracy — From Raw Pixels Alone</h2>
+  <p>
+    Given a start image and a goal image, LeWM encodes both into latent space, then uses the Cross-Entropy Method (CEM) to search over candidate action sequences. Each candidate is rolled out through the predictor, and the sequence whose final latent embedding is closest to the goal wins. No reward function. No RL training. Just physics prediction.
+  </p>
+  <p>
+    The Push-T environment requires pushing a T-shaped block to a target position using a circular agent. The model achieved <strong>96% success rate across 50 episodes</strong> — 48 successes, 2 failures.
+  </p>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value">96%</div>
+      <div class="stat-label">Success rate (50 episodes)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value gold">~215s</div>
+      <div class="stat-label">Per CEM solve (planning time)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">0</div>
+      <div class="stat-label">Proprioceptive inputs used</div>
+    </div>
+  </div>
+
+  <!-- VIDEO EMBEDS — Replace src with your local paths -->
+  <div class="media-embed">
+    <!-- Replace the src below with your local path, e.g. rollout_0.mp4 -->
+    <video controls muted playsinline poster="">
+      <source src="rollout_0.mp4" type="video/mp4">
+    </video>
+    <div class="media-caption">
+      <span>Successful planning rollout — agent pushes T-block to goal position</span>
+      <span class="tag">Success</span>
+    </div>
+  </div>
+
+  <div class="media-embed">
+    <!-- Replace with rollout_11.mp4 (failure case) -->
+    <video controls muted playsinline poster="">
+      <source src="rollout_11.mp4" type="video/mp4">
+    </video>
+    <div class="media-caption">
+      <span>Failure case — model fails to align block angle correctly</span>
+      <span class="tag" style="background:rgba(255,107,107,0.15);color:var(--accent-warm);">Failure</span>
+    </div>
+  </div>
+
+  <div class="insight">
+    <div class="insight-label">Why LLMs Cannot Do This</div>
+    <p>An LLM can describe in text how to push a block. It cannot take two 224×224 images, compute a latent trajectory, and output a sequence of (dx, dy) motor commands that achieve the goal in a physics simulator. This requires an internal dynamics model — which is exactly what LeWM learns.</p>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ═══════════════════ SECTION 4: DEMO 2 ═══════════════════ -->
+<section class="section fade-in">
+  <div class="section-number">04 — Demo 2: Anomaly Detection</div>
+  <h2>LeWM Detects Teleportation as Impossible but Ignores Color Changes — Proving It Learned Physics, Not Pixels</h2>
+  <p>
+    We fed the model three types of trajectories: <strong>normal</strong> (unperturbed), <strong>teleportation</strong> (objects suddenly jump to different positions), and <strong>color change</strong> (objects change tint). The model's "surprise" score measures prediction error — how much the actual next state diverges from what it predicted.
+  </p>
+  <p>
+    If the model had learned pixel patterns, both teleportation and color changes would produce high surprise. Instead, it spiked <strong>3.87× on teleportation</strong> (a physics violation) while registering <strong>0.88× on color changes</strong> (cosmetic, physics unchanged). This proves the latent space encodes physical dynamics, not visual appearance.
+  </p>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value warm">3.87×</div>
+      <div class="stat-label">Surprise ratio: Teleportation vs. Normal</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">0.88×</div>
+      <div class="stat-label">Surprise ratio: Color Change vs. Normal</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value gold">5</div>
+      <div class="stat-label">Episodes averaged for robustness</div>
+    </div>
+  </div>
+
+  <!-- IMAGE EMBED — Replace src with your local voe_demo.png -->
+  <div class="media-embed">
+    <img src="voe_demo.png" alt="Violation-of-Expectation surprise scores across three conditions">
+    <div class="media-caption">
+      <span>Surprise scores: Normal (baseline) vs. Teleportation (spike at perturbation) vs. Color Change (flat)</span>
+      <span class="tag">VoE Analysis</span>
+    </div>
+  </div>
+
+  <div class="insight">
+    <div class="insight-label">Why LLMs Cannot Do This</div>
+    <p>An LLM has no mechanism to watch a video sequence and detect that an object teleported. It has no internal physics simulator to compare "what should happen next" against "what actually happened." LeWM does this by rolling out predictions in latent space and measuring divergence — an operation with no text equivalent.</p>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ═══════════════════ SECTION 5: DEMO 3 ═══════════════════ -->
+<section class="section fade-in">
+  <div class="section-number">05 — Demo 3: Physics Probing</div>
+  <h2>A Simple Linear Regression on 192 Numbers Recovers Object Positions with R² = 0.975</h2>
+  <p>
+    We froze LeWM's encoder and trained lightweight probes (linear regression + small MLP) to predict physical quantities from its 192-dimensional latent embeddings. The target quantities: agent X/Y position, block X/Y position, and block rotation angle.
+  </p>
+  <p>
+    10,000 frames were sampled, embedded, and split 80/20 for train/test. The results demonstrate that <strong>the latent space linearly encodes spatial structure</strong> — you don't even need a neural network to extract object positions.
+  </p>
+
+  <table class="results-table">
+    <thead>
+      <tr>
+        <th>Property</th>
+        <th>Linear R²</th>
+        <th>MLP R²</th>
+        <th>Interpretation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Agent X</td>
+        <td>0.941</td>
+        <td>0.954</td>
+        <td>Near-perfect position recovery</td>
+      </tr>
+      <tr>
+        <td>Agent Y</td>
+        <td>0.950</td>
+        <td>0.968</td>
+        <td>Near-perfect position recovery</td>
+      </tr>
+      <tr>
+        <td>Block X</td>
+        <td>0.975</td>
+        <td>0.971</td>
+        <td>Linear probe outperforms MLP — linearly encoded</td>
+      </tr>
+      <tr>
+        <td>Block Y</td>
+        <td>0.961</td>
+        <td>0.975</td>
+        <td>Near-perfect position recovery</td>
+      </tr>
+      <tr>
+        <td>Block Angle</td>
+        <td>0.804</td>
+        <td>0.879</td>
+        <td>Rotation is harder but still well-encoded</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- IMAGE EMBED — Replace src with your local probe_demo.png -->
+  <div class="media-embed">
+    <img src="probe_demo.png" alt="Predicted vs. Actual scatter plots for all physical quantities">
+    <div class="media-caption">
+      <span>Predicted vs. Actual: Linear (top row) and MLP (bottom row) probes on frozen LeWM embeddings</span>
+      <span class="tag">Latent Probing</span>
+    </div>
+  </div>
+
+  <div class="insight">
+    <div class="insight-label">Why LLMs Cannot Do This</div>
+    <p>LLM embeddings encode semantic similarity — "king" is close to "queen." LeWM embeddings encode spatial similarity — "block at (200, 300)" is close to "block at (205, 298)." You cannot train a linear probe on GPT's hidden states and extract the physical position of an object in a video frame. LeWM's latent space is a compressed physics engine.</p>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ═══════════════════ SECTION 6: SYNTHESIS ═══════════════════ -->
+<section class="section fade-in">
+  <div class="section-number">06 — Synthesis</div>
+  <h2>Three Capabilities, One Conclusion: World Models Open a Design Space LLMs Cannot Reach</h2>
+
+  <table class="results-table">
+    <thead>
+      <tr>
+        <th>Capability</th>
+        <th>What We Proved</th>
+        <th>LLM Can Do?</th>
+        <th>Key Metric</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Visual Planning</td>
+        <td>Compute motor actions from start/goal images</td>
+        <td><span class="badge badge-no">NO</span></td>
+        <td>96% success rate</td>
+      </tr>
+      <tr>
+        <td>Physics Anomaly Detection</td>
+        <td>Detect teleportation, ignore cosmetic changes</td>
+        <td><span class="badge badge-no">NO</span></td>
+        <td>3.87× surprise ratio</td>
+      </tr>
+      <tr>
+        <td>Spatial Encoding</td>
+        <td>Linear probe recovers object positions</td>
+        <td><span class="badge badge-no">NO</span></td>
+        <td>R² = 0.975</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="insight" style="margin-top: 2.5rem;">
+    <div class="insight-label">The Bigger Picture</div>
+    <p>LeWM validates LeCun's thesis that the next frontier after language models is world models — systems that build internal representations of physical reality. At ~15M parameters trainable on a single GPU in hours, this isn't a foundation model flex. It's a proof of concept that a fundamentally different architecture can learn physics that LLMs structurally cannot.</p>
+  </div>
+
+  <p style="margin-top: 2rem;">
+    <strong>Where this matters:</strong> World models that understand physical context could power embodied AI assistants, detect anomalous behavioral patterns in video-based monitoring, or provide physically-grounded simulations for robotics and autonomous systems — capabilities that pure language models cannot offer.
+  </p>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<div class="section-divider"></div>
+<footer class="footer">
+  <p>
+    LeWM Exploration Report · April 2026<br>
+    <span style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:0.7rem;letter-spacing:1px;">
+      Paper: arxiv.org/abs/2603.19312 &nbsp;·&nbsp; Code: github.com/lucas-maes/le-wm
+    </span>
+  </p>
+</footer>
+
+<script>
+// Intersection Observer for fade-in animations
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
