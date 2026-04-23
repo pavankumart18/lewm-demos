@@ -34,13 +34,69 @@
     overflow-x: hidden;
   }
 
+  .page-switcher {
+    position: fixed;
+    top: 1.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(10, 10, 15, 0.78);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+  }
+
+  .page-switcher__label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding-left: 0.25rem;
+    white-space: nowrap;
+  }
+
+  .page-switcher__links {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .page-switcher__link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 0.55rem 0.95rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+    white-space: nowrap;
+  }
+
+  .page-switcher__link:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--border-accent);
+  }
+
+  .page-switcher__link.is-active {
+    color: var(--bg-primary);
+    background: var(--accent);
+    border-color: transparent;
+    font-weight: 600;
+  }
+
   /* ── HERO ── */
   .hero {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 4rem 6vw;
+    padding: 7rem 6vw 4rem;
     position: relative;
     overflow: hidden;
   }
@@ -448,7 +504,26 @@
 
   /* ── RESPONSIVE ── */
   @media (max-width: 768px) {
-    .hero { padding: 3rem 5vw; }
+    .page-switcher {
+      top: 0.75rem;
+      width: calc(100% - 1.5rem);
+      border-radius: 24px;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.65rem;
+    }
+    .page-switcher__label {
+      padding-left: 0;
+      text-align: center;
+    }
+    .page-switcher__links {
+      width: 100%;
+    }
+    .page-switcher__link {
+      flex: 1;
+      text-align: center;
+    }
+    .hero { padding: 8rem 5vw 3rem; }
     .section { padding: 3rem 5vw; }
     .hero-meta { flex-direction: column; gap: 1.2rem; }
     .stats-row { grid-template-columns: 1fr 1fr; }
@@ -462,6 +537,14 @@
 </style>
 </head>
 <body>
+
+<nav class="page-switcher" aria-label="Report switcher">
+  <span class="page-switcher__label">Reports</span>
+  <div class="page-switcher__links">
+    <a class="page-switcher__link is-active" href="index.html" aria-current="page">Physics Report</a>
+    <a class="page-switcher__link" href="index2.html">Planning Report</a>
+  </div>
+</nav>
 
 <!-- ═══════════════════ HERO ═══════════════════ -->
 <section class="hero">
